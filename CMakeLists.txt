@@ -12,33 +12,22 @@ if(CONFIG_ZMK_JAVELIN_STENO)
         COMMAND sed -i "s/constexpr StenoUserDictionaryData(const uint8_t/StenoUserDictionaryData(const uint8_t/"
           "${JAVELIN_SRC_DIR}/dictionary/user_dictionary.h"
       )
-      # Replace unit_test.h #else block to wrap test bodies in
-      # if constexpr(false) — prevents compilation of test code that
-      # references RUN_TESTS-only APIs like Pattern::HasEndAnchor
+      # Strip all test bodies from Javelin .cc files.
+      # TEST_BEGIN...TEST_END blocks contain code referencing
+      # RUN_TESTS-only APIs. Remove them entirely.
       execute_process(
         COMMAND python3 -c "
-import re
-f = '${JAVELIN_SRC_DIR}/unit_test.h'
-t = open(f).read()
-old = '''#define TEST_BEGIN__(text, file, line)                                         \\\\
-  namespace UnitTest##line {                                                   \\\\
-    static void Test() {
-
-#define TEST_END                                                               \\\\
-  }                                                                            \\\\
-  }'''
-new = '''#define TEST_BEGIN__(text, file, line)                                         \\\\
-  namespace UnitTest##line {                                                   \\\\
-    static void Test() { if constexpr(false) {
-
-#define TEST_END                                                               \\\\
-  } }                                                                          \\\\
-  }'''
-if old in t:
-    open(f,'w').write(t.replace(old, new))
-    print('unit_test.h patched')
-else:
-    print('unit_test.h: pattern not found')
+import glob, re, os
+src = '${JAVELIN_SRC_DIR}'
+pattern = re.compile(r'(?:^|\\n)(TEST_BEGIN\\(.*?TEST_END)', re.DOTALL)
+count = 0
+for f in glob.glob(os.path.join(src, '**/*.cc'), recursive=True):
+    t = open(f).read()
+    t2 = pattern.sub('', t)
+    if t2 != t:
+        open(f, 'w').write(t2)
+        count += 1
+print(f'Stripped test blocks from {count} files')
 "
       )
       message(STATUS "Javelin steno: source patches applied")
