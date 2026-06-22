@@ -5,7 +5,6 @@ config ZMK_JAVELIN_STENO
     default n
     select CPLUSPLUS
     select LIB_CPLUSPLUS
-    select NEWLIB_LIBC
 
 config ZMK_JAVELIN_STENO_HEAP_SIZE
     int "Heap size for Javelin engine (bytes)"
