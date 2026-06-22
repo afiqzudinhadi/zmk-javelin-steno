@@ -1,10 +1,7 @@
 --- a/unit_test.h
 +++ b/unit_test.h
-@@ -53,9 +53,10 @@
+@@ -56,8 +56,8 @@
 
- #else
-
-+// Dead template: body parsed but never instantiated → never compiled
  #define TEST_BEGIN__(text, file, line)                                         \
 -  namespace UnitTest##line {                                                   \
 -    static void Test() {
@@ -12,4 +9,3 @@
 +    template<bool _dummy=false> static void Test() {
 
  #define TEST_END                                                               \
-   }                                                                            \
