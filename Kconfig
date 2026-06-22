@@ -1,0 +1,48 @@
+menu "Javelin Steno Engine"
+
+config ZMK_JAVELIN_STENO
+    bool "Enable Javelin steno engine"
+    default n
+    select CPLUSPLUS
+    select LIB_CPLUSPLUS
+    select NEWLIB_LIBC
+
+config ZMK_JAVELIN_STENO_HEAP_SIZE
+    int "Heap size for Javelin engine (bytes)"
+    default 32768
+    depends on ZMK_JAVELIN_STENO
+
+config ZMK_JAVELIN_STENO_USER_DICT
+    bool "Enable user dictionary (writable flash)"
+    default y
+    depends on ZMK_JAVELIN_STENO
+
+config ZMK_JAVELIN_STENO_USER_DICT_SIZE
+    int "User dictionary flash size (bytes)"
+    default 16384
+    depends on ZMK_JAVELIN_STENO_USER_DICT
+
+config ZMK_JAVELIN_STENO_ORTHOGRAPHY_CACHE
+    bool "Enable orthography lookup cache (~32KB RAM)"
+    default n
+    depends on ZMK_JAVELIN_STENO
+
+config ZMK_JAVELIN_STENO_CONSOLE
+    bool "Enable steno console commands via USB"
+    default n
+    depends on ZMK_JAVELIN_STENO
+
+choice ZMK_JAVELIN_STENO_TRIGGER
+    prompt "Stroke trigger mode"
+    default ZMK_JAVELIN_STENO_TRIGGER_ALL_UP
+    depends on ZMK_JAVELIN_STENO
+
+config ZMK_JAVELIN_STENO_TRIGGER_ALL_UP
+    bool "All keys up (standard)"
+
+config ZMK_JAVELIN_STENO_TRIGGER_FIRST_UP
+    bool "First key up (faster, less forgiving)"
+
+endchoice
+
+endmenu

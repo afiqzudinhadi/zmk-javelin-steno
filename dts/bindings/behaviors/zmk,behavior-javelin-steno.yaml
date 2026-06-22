@@ -1,0 +1,11 @@
+description: |
+  Javelin steno behavior — maps key positions to steno keys and feeds
+  them into the on-board Javelin steno engine for chord-based text input.
+
+compatible: "zmk,behavior-javelin-steno"
+
+include: one_param.yaml
+
+properties:
+  "#binding-cells":
+    const: 1
