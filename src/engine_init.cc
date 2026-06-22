@@ -71,7 +71,7 @@ static bool load_dictionary_collection() {
   new (userDictionary) StenoUserDictionary(userDictData);
 
   // Add user dict as highest priority (first in list)
-  entries.Insert(0, StenoDictionaryListEntry(&userDictionary.value, true));
+  entries.InsertAt(0, StenoDictionaryListEntry(&userDictionary.value, true));
 
   new (dictionaryList)
       StenoDictionaryList(static_cast<List<StenoDictionaryListEntry> &&>(entries));
