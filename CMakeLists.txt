@@ -250,9 +250,14 @@ print(f'Stripped test blocks from {count} files')
     )
 
     # --- Dictionary binary embedding ---
-    # Priority: 1) JAVELIN_DICT_BIN cmake var
+    # Plover and Lapwing are additive — both can be enabled.
+    # All enabled dicts get compiled into one binary. Javelin's
+    # StenoDictionaryList stacks them (first in list = highest priority).
+    # User dict (add_translation) is always on top at runtime.
+    #
+    # Priority: 1) JAVELIN_DICT_BIN cmake var (skip auto-download)
     #           2) pre-compiled dicts/steno_dict.bin
-    #           3) auto-download based on Kconfig choice (Plover/Lapwing)
+    #           3) auto-download enabled dicts + compile
     #           4) null placeholder (engine won't start)
 
     set(DICT_DIR "${CMAKE_CURRENT_LIST_DIR}/dicts")
@@ -260,36 +265,33 @@ print(f'Stripped test blocks from {count} files')
     set(COMPILER "${CMAKE_CURRENT_LIST_DIR}/tools/dict_compiler/compile_dict.py")
     set(DICT_BIN "${DICT_DIR}/steno_dict.bin")
 
-    # Determine which dict to download based on Kconfig
+    # Collect all enabled dicts (additive)
+    set(DICT_URLS "")
+    set(DICT_NAMES "")
+
     if(CONFIG_ZMK_JAVELIN_STENO_DICT_PLOVER)
-      set(DICT_NAME "plover-main")
-      set(DICT_JSON "${DICT_SRC_DIR}/plover-main.json")
-      set(DICT_URLS
-        "https://raw.githubusercontent.com/openstenoproject/plover/main/plover/assets/main.json"
-      )
-      set(DICT_NAMES "plover-main")
-    elseif(CONFIG_ZMK_JAVELIN_STENO_DICT_LAPWING)
-      set(DICT_NAME "lapwing")
-      set(DICT_JSON "${DICT_SRC_DIR}/lapwing-base.json")
-      set(DICT_URLS
+      list(APPEND DICT_URLS
+        "https://raw.githubusercontent.com/openstenoproject/plover/main/plover/assets/main.json")
+      list(APPEND DICT_NAMES "plover-main")
+    endif()
+
+    if(CONFIG_ZMK_JAVELIN_STENO_DICT_LAPWING)
+      list(APPEND DICT_URLS
         "https://raw.githubusercontent.com/aerickt/plover-lapwing-aio/main/plover_lapwing/dictionaries/lapwing-base.json"
         "https://raw.githubusercontent.com/aerickt/plover-lapwing-aio/main/plover_lapwing/dictionaries/lapwing-commands.json"
-        "https://raw.githubusercontent.com/aerickt/plover-lapwing-aio/main/plover_lapwing/dictionaries/lapwing-numbers.json"
-      )
-      set(DICT_NAMES "lapwing-base" "lapwing-commands" "lapwing-numbers")
-    else()
-      set(DICT_NAME "none")
+        "https://raw.githubusercontent.com/aerickt/plover-lapwing-aio/main/plover_lapwing/dictionaries/lapwing-numbers.json")
+      list(APPEND DICT_NAMES "lapwing-base" "lapwing-commands" "lapwing-numbers")
     endif()
 
     if(DEFINED JAVELIN_DICT_BIN)
       set(DICT_BIN_PATH "${JAVELIN_DICT_BIN}")
     elseif(EXISTS "${DICT_BIN}")
       set(DICT_BIN_PATH "${DICT_BIN}")
-    elseif(NOT "${DICT_NAME}" STREQUAL "none")
-      # Auto-download + compile
+    elseif(DICT_URLS)
+      # Auto-download + compile all enabled dicts
       file(MAKE_DIRECTORY "${DICT_SRC_DIR}")
       set(DICT_JSONS "")
-      set(DICT_COMPILE_NAMES "")
+      set(DICT_COMPILE_ARGS "")
       list(LENGTH DICT_URLS DICT_COUNT)
       math(EXPR DICT_LAST "${DICT_COUNT} - 1")
 
@@ -312,21 +314,21 @@ print(f'Stripped test blocks from {count} files')
 
         if(EXISTS "${JSON_PATH}")
           list(APPEND DICT_JSONS "${JSON_PATH}")
-          list(APPEND DICT_COMPILE_NAMES "-n" "${NAME}")
+          list(APPEND DICT_COMPILE_ARGS "-n" "${NAME}")
         endif()
       endforeach()
 
       if(DICT_JSONS AND EXISTS "${COMPILER}")
-        message(STATUS "Javelin steno: compiling ${DICT_NAME} dictionary...")
+        message(STATUS "Javelin steno: compiling ${DICT_COUNT} dict(s)...")
         execute_process(
           COMMAND python3 "${COMPILER}" ${DICT_JSONS}
-            ${DICT_COMPILE_NAMES} -o "${DICT_BIN}"
+            ${DICT_COMPILE_ARGS} -o "${DICT_BIN}"
           RESULT_VARIABLE COMPILE_RC
           ERROR_VARIABLE COMPILE_ERR
         )
         if(COMPILE_RC EQUAL 0)
           set(DICT_BIN_PATH "${DICT_BIN}")
-          message(STATUS "Javelin steno: ${DICT_NAME} dictionary compiled")
+          message(STATUS "Javelin steno: dictionary compiled")
         else()
           message(WARNING "Javelin steno: compile failed: ${COMPILE_ERR}")
           set(DICT_BIN_PATH "")

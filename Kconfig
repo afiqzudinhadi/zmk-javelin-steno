@@ -8,20 +8,13 @@ config ZMK_JAVELIN_STENO
 
 if ZMK_JAVELIN_STENO
 
-choice ZMK_JAVELIN_STENO_DICT
-    prompt "Steno dictionary"
-    default ZMK_JAVELIN_STENO_DICT_PLOVER
-
 config ZMK_JAVELIN_STENO_DICT_PLOVER
-    bool "Plover (standard English)"
+    bool "Include Plover dictionary (standard English)"
+    default y
 
 config ZMK_JAVELIN_STENO_DICT_LAPWING
-    bool "Lapwing (modern, recommended for new learners)"
-
-config ZMK_JAVELIN_STENO_DICT_NONE
-    bool "None (upload via USB or provide custom binary)"
-
-endchoice
+    bool "Include Lapwing dictionary (modern, recommended for new learners)"
+    default n
 
 endif # ZMK_JAVELIN_STENO
 
