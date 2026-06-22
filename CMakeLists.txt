@@ -12,6 +12,11 @@ if(CONFIG_ZMK_JAVELIN_STENO)
         COMMAND sed -i "s/constexpr StenoUserDictionaryData(const uint8_t/StenoUserDictionaryData(const uint8_t/"
           "${JAVELIN_SRC_DIR}/dictionary/user_dictionary.h"
       )
+      # Disable orthography cache (saves ~32KB RAM, avoids missing LockCache/UnlockCache)
+      execute_process(
+        COMMAND sed -i "s/#define USE_ORTHOGRAPHY_CACHE 1/#define USE_ORTHOGRAPHY_CACHE 0/"
+          "${JAVELIN_SRC_DIR}/orthography.h"
+      )
       # Strip all test bodies from Javelin .cc files.
       # TEST_BEGIN...TEST_END blocks contain code referencing
       # RUN_TESTS-only APIs. Remove them entirely.
