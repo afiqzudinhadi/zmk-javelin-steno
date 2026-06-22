@@ -179,14 +179,23 @@ if(CONFIG_ZMK_JAVELIN_STENO)
       ${ZMK_INIT_SRC}
     )
 
-    # C++ flags + Javelin compile definitions
-    set_source_files_properties(${ALL_CXX_SRC} PROPERTIES
-      COMPILE_FLAGS "-std=gnu++23 -fno-exceptions -fno-rtti -fno-threadsafe-statics"
-      COMPILE_DEFINITIONS "JAVELIN_USE_EMBEDDED_STENO=1;JAVELIN_USE_USER_DICTIONARY=1;JAVELIN_PLATFORM_ZEPHYR=1"
+    # Build Javelin as a separate static library so we can control
+    # C++ standard without Zephyr's -std=c++11 interfering.
+    zephyr_library_named(javelin_steno)
+    zephyr_library_sources(${ALL_CXX_SRC})
+    zephyr_library_compile_options(
+      -std=gnu++23
+      -fno-exceptions
+      -fno-rtti
+      -fno-threadsafe-statics
+    )
+    zephyr_library_compile_definitions(
+      JAVELIN_USE_EMBEDDED_STENO=1
+      JAVELIN_USE_USER_DICTIONARY=1
+      JAVELIN_PLATFORM_ZEPHYR=1
     )
 
     target_sources(app PRIVATE
-      ${ALL_CXX_SRC}
       ${ZMK_BEHAVIOR_SRC}
     )
 
