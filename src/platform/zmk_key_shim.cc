@@ -1,8 +1,9 @@
 #include "key.h"
 #include "key_code.h"
 
-extern "C" {
 #include <zephyr/kernel.h>
+
+extern "C" {
 #include <zmk/event_manager.h>
 #include <zmk/events/keycode_state_changed.h>
 }

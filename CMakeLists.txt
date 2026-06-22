@@ -199,14 +199,18 @@ print(f'Stripped test blocks from {count} files')
       src/engine_init.cc
     )
 
-    # Combine all C++ sources
-    set(ALL_CXX_SRC
+    # Pure Javelin sources (no ZMK deps) → separate library for C++23
+    set(JAVELIN_LIB_SRC
       ${JAVELIN_CORE_SRC}
       ${JAVELIN_DICT_SRC}
       ${JAVELIN_PROC_SRC}
       ${JAVELIN_HAL_SRC}
       ${JAVELIN_FONT_SRC}
       ${JAVELIN_SPLIT_SRC}
+    )
+
+    # Shims + init (need ZMK headers) → compiled into app target
+    set(ZMK_BRIDGE_SRC
       ${ZMK_SHIM_SRC}
       ${ZMK_INIT_SRC}
     )
@@ -214,7 +218,7 @@ print(f'Stripped test blocks from {count} files')
     # Build Javelin as a separate static library so we can control
     # C++ standard without Zephyr's -std=c++11 interfering.
     zephyr_library_named(javelin_steno)
-    zephyr_library_sources(${ALL_CXX_SRC})
+    zephyr_library_sources(${JAVELIN_LIB_SRC})
     zephyr_library_compile_options(
       -std=gnu++23
       -fno-exceptions
@@ -233,8 +237,14 @@ print(f'Stripped test blocks from {count} files')
     # Test suppression handled by include/javelin_overrides/unit_test.h
     # which shadows Javelin's unit_test.h via include path ordering.
 
+    # Bridge sources (C++ with ZMK headers) compiled into app target
+    set_source_files_properties(${ZMK_BRIDGE_SRC} PROPERTIES
+      COMPILE_FLAGS "-std=gnu++23 -fno-exceptions -fno-rtti -fno-threadsafe-statics -fpermissive"
+    )
+
     target_sources(app PRIVATE
       ${ZMK_BEHAVIOR_SRC}
+      ${ZMK_BRIDGE_SRC}
     )
 
     # Dictionary binary embedding.
