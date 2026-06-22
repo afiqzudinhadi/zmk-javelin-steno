@@ -3,6 +3,28 @@ if(CONFIG_ZMK_JAVELIN_STENO)
   # Only compile on central side of split keyboards (or non-split)
   if((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 
+    # Apply patches to javelin source (removes constexpr from reinterpret_cast sites)
+    set(JAVELIN_PATCH_DIR "${CMAKE_CURRENT_LIST_DIR}/patches")
+    set(JAVELIN_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/javelin")
+    if(EXISTS "${JAVELIN_PATCH_DIR}" AND EXISTS "${JAVELIN_SRC_DIR}")
+      file(GLOB JAVELIN_PATCHES "${JAVELIN_PATCH_DIR}/*.patch")
+      foreach(PATCH ${JAVELIN_PATCHES})
+        execute_process(
+          COMMAND git apply --check ${PATCH}
+          WORKING_DIRECTORY ${JAVELIN_SRC_DIR}
+          RESULT_VARIABLE PATCH_CHECK_RESULT
+          ERROR_QUIET
+        )
+        if(PATCH_CHECK_RESULT EQUAL 0)
+          execute_process(
+            COMMAND git apply ${PATCH}
+            WORKING_DIRECTORY ${JAVELIN_SRC_DIR}
+          )
+          message(STATUS "Javelin steno: applied patch ${PATCH}")
+        endif()
+      endforeach()
+    endif()
+
     zephyr_include_directories(javelin)
     zephyr_include_directories(include)
 
