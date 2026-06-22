@@ -25,6 +25,8 @@ if(CONFIG_ZMK_JAVELIN_STENO)
       endforeach()
     endif()
 
+    # Override dir MUST come before javelin/ so our unit_test.h is found first
+    zephyr_include_directories(include/javelin_overrides)
     zephyr_include_directories(javelin)
     zephyr_include_directories(include)
 
@@ -220,10 +222,8 @@ if(CONFIG_ZMK_JAVELIN_STENO)
       JAVELIN_BOARD_CONFIG=<stddef.h>
       M_PI=3.14159265358979323846
     )
-    # Suppress test compilation: Javelin's TEST_BEGIN/TEST_END macros
-    # compile test bodies even without RUN_TESTS. Some tests reference
-    # RUN_TESTS-only APIs. Override macros via include to dead-code them.
-    zephyr_library_compile_options(-include ${CMAKE_CURRENT_LIST_DIR}/include/zmk_javelin_steno/suppress_tests.h)
+    # Test suppression handled by include/javelin_overrides/unit_test.h
+    # which shadows Javelin's unit_test.h via include path ordering.
 
     target_sources(app PRIVATE
       ${ZMK_BEHAVIOR_SRC}
