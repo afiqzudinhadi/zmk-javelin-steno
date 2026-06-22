@@ -188,6 +188,8 @@ if(CONFIG_ZMK_JAVELIN_STENO)
       -fno-exceptions
       -fno-rtti
       -fno-threadsafe-statics
+      -Wno-invalid-constexpr
+      -fpermissive
     )
     zephyr_library_compile_definitions(
       JAVELIN_USE_EMBEDDED_STENO=1
