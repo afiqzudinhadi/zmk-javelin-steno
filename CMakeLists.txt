@@ -12,11 +12,34 @@ if(CONFIG_ZMK_JAVELIN_STENO)
         COMMAND sed -i "s/constexpr StenoUserDictionaryData(const uint8_t/StenoUserDictionaryData(const uint8_t/"
           "${JAVELIN_SRC_DIR}/dictionary/user_dictionary.h"
       )
-      # Make TEST_BEGIN use template to dead-code test bodies
-      # (test code references RUN_TESTS-only APIs)
+      # Replace unit_test.h #else block to wrap test bodies in
+      # if constexpr(false) — prevents compilation of test code that
+      # references RUN_TESTS-only APIs like Pattern::HasEndAnchor
       execute_process(
-        COMMAND sed -i "s/static void Test() {/template<bool _d=false> static void Test() {/"
-          "${JAVELIN_SRC_DIR}/unit_test.h"
+        COMMAND python3 -c "
+import re
+f = '${JAVELIN_SRC_DIR}/unit_test.h'
+t = open(f).read()
+old = '''#define TEST_BEGIN__(text, file, line)                                         \\\\
+  namespace UnitTest##line {                                                   \\\\
+    static void Test() {
+
+#define TEST_END                                                               \\\\
+  }                                                                            \\\\
+  }'''
+new = '''#define TEST_BEGIN__(text, file, line)                                         \\\\
+  namespace UnitTest##line {                                                   \\\\
+    static void Test() { if constexpr(false) {
+
+#define TEST_END                                                               \\\\
+  } }                                                                          \\\\
+  }'''
+if old in t:
+    open(f,'w').write(t.replace(old, new))
+    print('unit_test.h patched')
+else:
+    print('unit_test.h: pattern not found')
+"
       )
       message(STATUS "Javelin steno: source patches applied")
     endif()
