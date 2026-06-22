@@ -6,4 +6,23 @@ config ZMK_JAVELIN_STENO
     select CPLUSPLUS
     select LIB_CPLUSPLUS
 
+if ZMK_JAVELIN_STENO
+
+choice ZMK_JAVELIN_STENO_DICT
+    prompt "Steno dictionary"
+    default ZMK_JAVELIN_STENO_DICT_PLOVER
+
+config ZMK_JAVELIN_STENO_DICT_PLOVER
+    bool "Plover (standard English)"
+
+config ZMK_JAVELIN_STENO_DICT_LAPWING
+    bool "Lapwing (modern, recommended for new learners)"
+
+config ZMK_JAVELIN_STENO_DICT_NONE
+    bool "None (upload via USB or provide custom binary)"
+
+endchoice
+
+endif # ZMK_JAVELIN_STENO
+
 endmenu

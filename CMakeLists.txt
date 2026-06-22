@@ -252,7 +252,7 @@ print(f'Stripped test blocks from {count} files')
     # --- Dictionary binary embedding ---
     # Priority: 1) JAVELIN_DICT_BIN cmake var
     #           2) pre-compiled dicts/steno_dict.bin
-    #           3) auto-download Plover dict + compile
+    #           3) auto-download based on Kconfig choice (Plover/Lapwing)
     #           4) null placeholder (engine won't start)
 
     set(DICT_DIR "${CMAKE_CURRENT_LIST_DIR}/dicts")
@@ -260,51 +260,82 @@ print(f'Stripped test blocks from {count} files')
     set(COMPILER "${CMAKE_CURRENT_LIST_DIR}/tools/dict_compiler/compile_dict.py")
     set(DICT_BIN "${DICT_DIR}/steno_dict.bin")
 
+    # Determine which dict to download based on Kconfig
+    if(CONFIG_ZMK_JAVELIN_STENO_DICT_PLOVER)
+      set(DICT_NAME "plover-main")
+      set(DICT_JSON "${DICT_SRC_DIR}/plover-main.json")
+      set(DICT_URLS
+        "https://raw.githubusercontent.com/openstenoproject/plover/main/plover/assets/main.json"
+      )
+      set(DICT_NAMES "plover-main")
+    elseif(CONFIG_ZMK_JAVELIN_STENO_DICT_LAPWING)
+      set(DICT_NAME "lapwing")
+      set(DICT_JSON "${DICT_SRC_DIR}/lapwing-base.json")
+      set(DICT_URLS
+        "https://raw.githubusercontent.com/aerickt/plover-lapwing-aio/main/plover_lapwing/dictionaries/lapwing-base.json"
+        "https://raw.githubusercontent.com/aerickt/plover-lapwing-aio/main/plover_lapwing/dictionaries/lapwing-commands.json"
+        "https://raw.githubusercontent.com/aerickt/plover-lapwing-aio/main/plover_lapwing/dictionaries/lapwing-numbers.json"
+      )
+      set(DICT_NAMES "lapwing-base" "lapwing-commands" "lapwing-numbers")
+    else()
+      set(DICT_NAME "none")
+    endif()
+
     if(DEFINED JAVELIN_DICT_BIN)
       set(DICT_BIN_PATH "${JAVELIN_DICT_BIN}")
     elseif(EXISTS "${DICT_BIN}")
       set(DICT_BIN_PATH "${DICT_BIN}")
-    else()
-      # Auto-download + compile if no pre-built binary exists
-      set(PLOVER_JSON "${DICT_SRC_DIR}/plover-main.json")
-      set(PLOVER_URL "https://raw.githubusercontent.com/openstenoproject/plover/main/plover/assets/main.json")
+    elseif(NOT "${DICT_NAME}" STREQUAL "none")
+      # Auto-download + compile
+      file(MAKE_DIRECTORY "${DICT_SRC_DIR}")
+      set(DICT_JSONS "")
+      set(DICT_COMPILE_NAMES "")
+      list(LENGTH DICT_URLS DICT_COUNT)
+      math(EXPR DICT_LAST "${DICT_COUNT} - 1")
 
-      if(NOT EXISTS "${PLOVER_JSON}")
-        message(STATUS "Javelin steno: downloading Plover dictionary...")
-        file(MAKE_DIRECTORY "${DICT_SRC_DIR}")
-        file(DOWNLOAD "${PLOVER_URL}" "${PLOVER_JSON}"
-          STATUS DOWNLOAD_STATUS
-          TIMEOUT 30
-        )
-        list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RC)
-        if(NOT DOWNLOAD_RC EQUAL 0)
-          message(WARNING "Javelin steno: dict download failed (rc=${DOWNLOAD_RC})")
-          file(REMOVE "${PLOVER_JSON}")
+      foreach(IDX RANGE ${DICT_LAST})
+        list(GET DICT_URLS ${IDX} URL)
+        list(GET DICT_NAMES ${IDX} NAME)
+        set(JSON_PATH "${DICT_SRC_DIR}/${NAME}.json")
+
+        if(NOT EXISTS "${JSON_PATH}")
+          message(STATUS "Javelin steno: downloading ${NAME}...")
+          file(DOWNLOAD "${URL}" "${JSON_PATH}" STATUS DL_STATUS TIMEOUT 30)
+          list(GET DL_STATUS 0 DL_RC)
+          if(NOT DL_RC EQUAL 0)
+            message(WARNING "Javelin steno: download failed for ${NAME}")
+            file(REMOVE "${JSON_PATH}")
+          endif()
         else()
-          message(STATUS "Javelin steno: downloaded Plover dictionary")
+          message(STATUS "Javelin steno: using cached ${NAME}")
         endif()
-      else()
-        message(STATUS "Javelin steno: using cached Plover dictionary")
-      endif()
 
-      if(EXISTS "${PLOVER_JSON}" AND EXISTS "${COMPILER}")
-        message(STATUS "Javelin steno: compiling dictionary...")
+        if(EXISTS "${JSON_PATH}")
+          list(APPEND DICT_JSONS "${JSON_PATH}")
+          list(APPEND DICT_COMPILE_NAMES "-n" "${NAME}")
+        endif()
+      endforeach()
+
+      if(DICT_JSONS AND EXISTS "${COMPILER}")
+        message(STATUS "Javelin steno: compiling ${DICT_NAME} dictionary...")
         execute_process(
-          COMMAND python3 "${COMPILER}" "${PLOVER_JSON}"
-            -n plover-main -o "${DICT_BIN}"
+          COMMAND python3 "${COMPILER}" ${DICT_JSONS}
+            ${DICT_COMPILE_NAMES} -o "${DICT_BIN}"
           RESULT_VARIABLE COMPILE_RC
           ERROR_VARIABLE COMPILE_ERR
         )
         if(COMPILE_RC EQUAL 0)
           set(DICT_BIN_PATH "${DICT_BIN}")
-          message(STATUS "Javelin steno: dictionary compiled")
+          message(STATUS "Javelin steno: ${DICT_NAME} dictionary compiled")
         else()
-          message(WARNING "Javelin steno: dict compile failed: ${COMPILE_ERR}")
+          message(WARNING "Javelin steno: compile failed: ${COMPILE_ERR}")
           set(DICT_BIN_PATH "")
         endif()
       else()
         set(DICT_BIN_PATH "")
       endif()
+    else()
+      set(DICT_BIN_PATH "")
     endif()
 
     if(NOT "${DICT_BIN_PATH}" STREQUAL "")
