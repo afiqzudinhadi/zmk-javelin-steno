@@ -218,6 +218,8 @@ print(f'Stripped test blocks from {count} files')
     # Build everything as a Zephyr library for C++23.
     zephyr_library_named(javelin_steno)
     zephyr_library_sources(${JAVELIN_LIB_SRC} ${ZMK_BRIDGE_SRC})
+    # ZMK app headers aren't inherited by libraries — add manually
+    zephyr_library_include_directories(${APPLICATION_SOURCE_DIR}/include)
     zephyr_library_compile_options(
       -std=gnu++23
       -fno-exceptions
