@@ -123,7 +123,7 @@ print(f'Stripped test blocks from {count} files')
     # Processor sources
     set(JAVELIN_PROC_SRC
       javelin/processor/all_up.cc
-      javelin/processor/fake_processor.cc
+      # javelin/processor/fake_processor.cc  # test-only, uses RUN_TESTS APIs
       javelin/processor/first_up.cc
       javelin/processor/gemini.cc
       javelin/processor/jeff_modifiers.cc
