@@ -7,14 +7,13 @@ extern "C" {
 void zmk_javelin_steno_init(void);
 void zmk_javelin_steno_process_key(int steno_key_index, bool is_press);
 
+// Linker symbols for the embedded dictionary binary
+extern const uint8_t _javelin_dict_start[];
+extern const uint8_t _javelin_dict_end[];
+
 #ifdef __cplusplus
 }
 
 class StenoDictionary;
 struct StenoOrthography;
-
-// Complete engine initialization with loaded dictionary.
-// Called from dictionary loading code once flash data is validated.
-void zmk_javelin_steno_init_engine(StenoDictionary &dictionary,
-                                   const StenoOrthography &orthography);
 #endif

@@ -190,6 +190,30 @@ if(CONFIG_ZMK_JAVELIN_STENO)
       ${ZMK_BEHAVIOR_SRC}
     )
 
+    # Dictionary binary embedding.
+    # Users place compiled dict at dicts/steno_dict.bin (or set
+    # JAVELIN_DICT_BIN via CMake cache / corne.conf extra args).
+    # If no dict found, a null placeholder is embedded and engine
+    # logs a warning at boot.
+    if(DEFINED JAVELIN_DICT_BIN)
+      set(DICT_BIN_PATH "${JAVELIN_DICT_BIN}")
+    elseif(EXISTS "${CMAKE_CURRENT_LIST_DIR}/dicts/steno_dict.bin")
+      set(DICT_BIN_PATH "${CMAKE_CURRENT_LIST_DIR}/dicts/steno_dict.bin")
+    else()
+      set(DICT_BIN_PATH "")
+    endif()
+
+    if(NOT "${DICT_BIN_PATH}" STREQUAL "")
+      set_source_files_properties(src/dict_embed.S PROPERTIES
+        COMPILE_DEFINITIONS "JAVELIN_DICT_BIN_PATH=\"${DICT_BIN_PATH}\""
+      )
+      message(STATUS "Javelin steno: embedding dictionary from ${DICT_BIN_PATH}")
+    else()
+      message(WARNING "Javelin steno: no dictionary binary found — engine will not start")
+    endif()
+
+    target_sources(app PRIVATE src/dict_embed.S)
+
   endif() # central role check
 
 endif() # CONFIG_ZMK_JAVELIN_STENO
