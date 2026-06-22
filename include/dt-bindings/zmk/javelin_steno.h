@@ -1,0 +1,41 @@
+// Steno key indices matching Javelin's StenoKey enum.
+// Use in keymap: &javsteno STENO_S1, &javsteno STENO_TL, etc.
+
+#define STENO_S1    0
+#define STENO_S2    1
+#define STENO_TL    2
+#define STENO_KL    3
+#define STENO_PL    4
+#define STENO_WL    5
+#define STENO_HL    6
+#define STENO_RL    7
+#define STENO_A     8
+#define STENO_O     9
+#define STENO_STAR1 10
+#define STENO_STAR2 11
+#define STENO_STAR3 12
+#define STENO_STAR4 13
+#define STENO_E     14
+#define STENO_U     15
+#define STENO_FR    16
+#define STENO_RR    17
+#define STENO_PR    18
+#define STENO_BR    19
+#define STENO_LR    20
+#define STENO_GR    21
+#define STENO_TR    22
+#define STENO_SR    23
+#define STENO_DR    24
+#define STENO_ZR    25
+#define STENO_NUM1  26
+#define STENO_NUM2  27
+#define STENO_NUM3  28
+#define STENO_NUM4  29
+#define STENO_NUM5  30
+#define STENO_NUM6  31
+#define STENO_NUM7  32
+#define STENO_NUM8  33
+#define STENO_NUM9  34
+#define STENO_NUM10 35
+#define STENO_NUM11 36
+#define STENO_NUM12 37

@@ -1,20 +1,51 @@
 #include "key.h"
 #include "key_code.h"
 
-// TODO Phase 2: Replace stubs with ZMK HID event emission.
-// Key::Press/Release are called by Javelin's output pipeline to send
-// translated text to the host. These need to map to
-// raise_zmk_keycode_state_changed() with correct usage pages.
+extern "C" {
+#include <zephyr/kernel.h>
+#include <zmk/event_manager.h>
+#include <zmk/events/keycode_state_changed.h>
+}
+
+// Javelin KeyCode layout:
+//   0x04-0xE7    → USB HID Keyboard page (0x07)
+//   0xE0-0xE7    → Modifier keys (subset of keyboard page)
+//   0x10000+     → Consumer page (0x0C), usage = value & 0xFFFF
+
+static constexpr uint16_t HID_USAGE_PAGE_KEYBOARD = 0x07;
+static constexpr uint16_t HID_USAGE_PAGE_CONSUMER = 0x0C;
+
+static void emit_keycode(KeyCode key, bool pressed) {
+  uint32_t v = key.value;
+  uint16_t usage_page;
+  uint32_t keycode;
+
+  if (v >= 0x10000) {
+    usage_page = HID_USAGE_PAGE_CONSUMER;
+    keycode = v & 0xFFFF;
+  } else {
+    usage_page = HID_USAGE_PAGE_KEYBOARD;
+    keycode = v;
+  }
+
+  raise_zmk_keycode_state_changed(
+      (struct zmk_keycode_state_changed){
+          .usage_page = usage_page,
+          .keycode = keycode,
+          .implicit_modifiers = 0,
+          .explicit_modifiers = 0,
+          .state = pressed,
+          .timestamp = k_uptime_get(),
+      });
+}
 
 bool Key::historyEnabled = false;
 
-void Key::Press(KeyCode key) {
-  (void)key;
-}
+void Key::Press(KeyCode key) { emit_keycode(key, true); }
 
-void Key::Release(KeyCode key) {
-  (void)key;
-}
+void Key::Release(KeyCode key) { emit_keycode(key, false); }
 
 void Key::Flush() {
+  // ZMK processes events asynchronously via its event queue.
+  // Flush is a no-op — events are dispatched as they're raised.
 }

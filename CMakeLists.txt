@@ -14,7 +14,6 @@ if(CONFIG_ZMK_JAVELIN_STENO)
       javelin/bit.cc
       javelin/button_script_manager.cc
       javelin/button_script.cc
-      javelin/clock.cc
       javelin/console_input_buffer.cc
       javelin/console.cc
       javelin/container/cyclic_queue.cc
@@ -31,7 +30,6 @@ if(CONFIG_ZMK_JAVELIN_STENO)
       javelin/host_layout.cc
       javelin/key_code.cc
       javelin/key_press_parser.cc
-      javelin/key.cc
       javelin/mem.cc
       javelin/orthography.cc
       javelin/pattern_component.cc
@@ -55,7 +53,6 @@ if(CONFIG_ZMK_JAVELIN_STENO)
       javelin/stroke_list_parser.cc
       javelin/stroke.cc
       javelin/system.cc
-      javelin/thread.cc
       javelin/timer_manager.cc
       javelin/unicode_script.cc
       javelin/unicode.cc
@@ -182,13 +179,9 @@ if(CONFIG_ZMK_JAVELIN_STENO)
       ${ZMK_INIT_SRC}
     )
 
-    # Set C++ compile flags for all Javelin + shim sources
+    # C++ flags + Javelin compile definitions
     set_source_files_properties(${ALL_CXX_SRC} PROPERTIES
       COMPILE_FLAGS "-std=gnu++23 -fno-exceptions -fno-rtti -fno-threadsafe-statics"
-    )
-
-    # Compile definitions for Javelin
-    set_source_files_properties(${ALL_CXX_SRC} PROPERTIES
       COMPILE_DEFINITIONS "JAVELIN_USE_EMBEDDED_STENO=1;JAVELIN_USE_USER_DICTIONARY=1;JAVELIN_PLATFORM_ZEPHYR=1"
     )
 
