@@ -187,6 +187,7 @@ print(f'Stripped test blocks from {count} files')
       src/platform/zmk_flash_shim.cc
       src/platform/zmk_connection_shim.cc
       src/platform/zmk_console_shim.cc
+      src/platform/zmk_stubs.cc
     )
 
     # ZMK behavior driver (C, not C++)
@@ -234,6 +235,7 @@ print(f'Stripped test blocks from {count} files')
       JAVELIN_PLATFORM_ZEPHYR=1
       JAVELIN_BOARD_CONFIG=<stddef.h>
       M_PI=3.14159265358979323846
+      USE_ORTHOGRAPHY_CACHE=0
     )
     # Test suppression handled by include/javelin_overrides/unit_test.h
     # which shadows Javelin's unit_test.h via include path ordering.

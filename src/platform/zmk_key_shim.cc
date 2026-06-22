@@ -2,8 +2,20 @@
 #include "key_code.h"
 
 #include <zephyr/kernel.h>
-#include <zmk/event_manager.h>
-#include <zmk/events/keycode_state_changed.h>
+
+// ZMK event headers need C linkage for the function declarations
+// but Zephyr's own headers are C++-safe.
+extern "C" {
+struct zmk_keycode_state_changed {
+  uint16_t usage_page;
+  uint32_t keycode;
+  uint8_t implicit_modifiers;
+  uint8_t explicit_modifiers;
+  bool state;
+  int64_t timestamp;
+};
+int raise_zmk_keycode_state_changed(struct zmk_keycode_state_changed ev);
+}
 
 static constexpr uint16_t HID_USAGE_PAGE_KEYBOARD = 0x07;
 static constexpr uint16_t HID_USAGE_PAGE_CONSUMER = 0x0C;
