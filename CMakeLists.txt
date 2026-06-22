@@ -3,26 +3,22 @@ if(CONFIG_ZMK_JAVELIN_STENO)
   # Only compile on central side of split keyboards (or non-split)
   if((NOT CONFIG_ZMK_SPLIT) OR CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 
-    # Apply patches to javelin source (removes constexpr from reinterpret_cast sites)
-    set(JAVELIN_PATCH_DIR "${CMAKE_CURRENT_LIST_DIR}/patches")
+    # Patch javelin source for Zephyr compatibility
     set(JAVELIN_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/javelin")
-    if(EXISTS "${JAVELIN_PATCH_DIR}" AND EXISTS "${JAVELIN_SRC_DIR}")
-      file(GLOB JAVELIN_PATCHES "${JAVELIN_PATCH_DIR}/*.patch")
-      foreach(PATCH ${JAVELIN_PATCHES})
-        execute_process(
-          COMMAND git apply --check ${PATCH}
-          WORKING_DIRECTORY ${JAVELIN_SRC_DIR}
-          RESULT_VARIABLE PATCH_CHECK_RESULT
-          ERROR_QUIET
-        )
-        if(PATCH_CHECK_RESULT EQUAL 0)
-          execute_process(
-            COMMAND git apply ${PATCH}
-            WORKING_DIRECTORY ${JAVELIN_SRC_DIR}
-          )
-          message(STATUS "Javelin steno: applied patch ${PATCH}")
-        endif()
-      endforeach()
+    if(EXISTS "${JAVELIN_SRC_DIR}/dictionary/user_dictionary.h")
+      # Remove constexpr from StenoUserDictionaryData constructor
+      # (reinterpret_cast not allowed in constexpr on GCC)
+      execute_process(
+        COMMAND sed -i "s/constexpr StenoUserDictionaryData(const uint8_t/StenoUserDictionaryData(const uint8_t/"
+          "${JAVELIN_SRC_DIR}/dictionary/user_dictionary.h"
+      )
+      # Make TEST_BEGIN use template to dead-code test bodies
+      # (test code references RUN_TESTS-only APIs)
+      execute_process(
+        COMMAND sed -i "s/static void Test() {/template<bool _d=false> static void Test() {/"
+          "${JAVELIN_SRC_DIR}/unit_test.h"
+      )
+      message(STATUS "Javelin steno: source patches applied")
     endif()
 
     # Override dir MUST come before javelin/ so our unit_test.h is found first
