@@ -1,9 +1,0 @@
---- a/unit_test.h
-+++ b/unit_test.h
-@@ -58,7 +58,7 @@
- #define TEST_BEGIN__(text, file, line)                                         \
-   namespace UnitTest##line {                                                   \
--    static void Test() {
-+    template<bool _dead=false> static void Test() {
-
- #define TEST_END                                                               \
