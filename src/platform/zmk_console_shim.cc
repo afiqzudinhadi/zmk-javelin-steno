@@ -1,14 +1,8 @@
 #include "console.h"
-
-extern "C" {
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-}
 
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
-
-// Route Javelin console output to ZMK logging system.
-// In Phase 5, this can be upgraded to USB CDC ACM for interactive console.
 
 static char line_buf[256];
 static size_t line_pos = 0;

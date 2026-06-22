@@ -1,8 +1,5 @@
 #include "clock.h"
-
-extern "C" {
 #include <zephyr/kernel.h>
-}
 
 uint32_t Clock::GetMilliseconds() { return k_uptime_get_32(); }
 

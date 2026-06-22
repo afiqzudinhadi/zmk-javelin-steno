@@ -2,16 +2,8 @@
 #include "key_code.h"
 
 #include <zephyr/kernel.h>
-
-extern "C" {
 #include <zmk/event_manager.h>
 #include <zmk/events/keycode_state_changed.h>
-}
-
-// Javelin KeyCode layout:
-//   0x04-0xE7    → USB HID Keyboard page (0x07)
-//   0xE0-0xE7    → Modifier keys (subset of keyboard page)
-//   0x10000+     → Consumer page (0x0C), usage = value & 0xFFFF
 
 static constexpr uint16_t HID_USAGE_PAGE_KEYBOARD = 0x07;
 static constexpr uint16_t HID_USAGE_PAGE_CONSUMER = 0x0C;
@@ -46,7 +38,4 @@ void Key::Press(KeyCode key) { emit_keycode(key, true); }
 
 void Key::Release(KeyCode key) { emit_keycode(key, false); }
 
-void Key::Flush() {
-  // ZMK processes events asynchronously via its event queue.
-  // Flush is a no-op — events are dispatched as they're raised.
-}
+void Key::Flush() {}
