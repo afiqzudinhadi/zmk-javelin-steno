@@ -1,1 +1,3 @@
 __pycache__/
+dicts_src/
+dicts/*.bin

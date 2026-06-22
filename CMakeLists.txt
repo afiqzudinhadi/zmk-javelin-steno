@@ -249,17 +249,62 @@ print(f'Stripped test blocks from {count} files')
       ${ZMK_BEHAVIOR_SRC}
     )
 
-    # Dictionary binary embedding.
-    # Users place compiled dict at dicts/steno_dict.bin (or set
-    # JAVELIN_DICT_BIN via CMake cache / corne.conf extra args).
-    # If no dict found, a null placeholder is embedded and engine
-    # logs a warning at boot.
+    # --- Dictionary binary embedding ---
+    # Priority: 1) JAVELIN_DICT_BIN cmake var
+    #           2) pre-compiled dicts/steno_dict.bin
+    #           3) auto-download Plover dict + compile
+    #           4) null placeholder (engine won't start)
+
+    set(DICT_DIR "${CMAKE_CURRENT_LIST_DIR}/dicts")
+    set(DICT_SRC_DIR "${CMAKE_CURRENT_LIST_DIR}/dicts_src")
+    set(COMPILER "${CMAKE_CURRENT_LIST_DIR}/tools/dict_compiler/compile_dict.py")
+    set(DICT_BIN "${DICT_DIR}/steno_dict.bin")
+
     if(DEFINED JAVELIN_DICT_BIN)
       set(DICT_BIN_PATH "${JAVELIN_DICT_BIN}")
-    elseif(EXISTS "${CMAKE_CURRENT_LIST_DIR}/dicts/steno_dict.bin")
-      set(DICT_BIN_PATH "${CMAKE_CURRENT_LIST_DIR}/dicts/steno_dict.bin")
+    elseif(EXISTS "${DICT_BIN}")
+      set(DICT_BIN_PATH "${DICT_BIN}")
     else()
-      set(DICT_BIN_PATH "")
+      # Auto-download + compile if no pre-built binary exists
+      set(PLOVER_JSON "${DICT_SRC_DIR}/plover-main.json")
+      set(PLOVER_URL "https://raw.githubusercontent.com/openstenoproject/plover/main/plover/assets/main.json")
+
+      if(NOT EXISTS "${PLOVER_JSON}")
+        message(STATUS "Javelin steno: downloading Plover dictionary...")
+        file(MAKE_DIRECTORY "${DICT_SRC_DIR}")
+        file(DOWNLOAD "${PLOVER_URL}" "${PLOVER_JSON}"
+          STATUS DOWNLOAD_STATUS
+          TIMEOUT 30
+        )
+        list(GET DOWNLOAD_STATUS 0 DOWNLOAD_RC)
+        if(NOT DOWNLOAD_RC EQUAL 0)
+          message(WARNING "Javelin steno: dict download failed (rc=${DOWNLOAD_RC})")
+          file(REMOVE "${PLOVER_JSON}")
+        else()
+          message(STATUS "Javelin steno: downloaded Plover dictionary")
+        endif()
+      else()
+        message(STATUS "Javelin steno: using cached Plover dictionary")
+      endif()
+
+      if(EXISTS "${PLOVER_JSON}" AND EXISTS "${COMPILER}")
+        message(STATUS "Javelin steno: compiling dictionary...")
+        execute_process(
+          COMMAND python3 "${COMPILER}" "${PLOVER_JSON}"
+            -n plover-main -o "${DICT_BIN}"
+          RESULT_VARIABLE COMPILE_RC
+          ERROR_VARIABLE COMPILE_ERR
+        )
+        if(COMPILE_RC EQUAL 0)
+          set(DICT_BIN_PATH "${DICT_BIN}")
+          message(STATUS "Javelin steno: dictionary compiled")
+        else()
+          message(WARNING "Javelin steno: dict compile failed: ${COMPILE_ERR}")
+          set(DICT_BIN_PATH "")
+        endif()
+      else()
+        set(DICT_BIN_PATH "")
+      endif()
     endif()
 
     if(NOT "${DICT_BIN_PATH}" STREQUAL "")
@@ -268,7 +313,7 @@ print(f'Stripped test blocks from {count} files')
       )
       message(STATUS "Javelin steno: embedding dictionary from ${DICT_BIN_PATH}")
     else()
-      message(WARNING "Javelin steno: no dictionary binary found — engine will not start")
+      message(WARNING "Javelin steno: no dictionary — engine will not start")
     endif()
 
     target_sources(app PRIVATE src/dict_embed.S)
