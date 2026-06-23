@@ -341,8 +341,9 @@ print(f'Stripped test blocks from {count} files')
     endif()
 
     if(NOT "${DICT_BIN_PATH}" STREQUAL "")
-      set_source_files_properties(src/dict_embed.S PROPERTIES
-        COMPILE_DEFINITIONS "JAVELIN_DICT_BIN_PATH=\"${DICT_BIN_PATH}\""
+      set_source_files_properties(src/dict_embed.S
+        TARGET_DIRECTORY app
+        PROPERTIES COMPILE_DEFINITIONS "JAVELIN_DICT_BIN_PATH=\"${DICT_BIN_PATH}\""
       )
       message(STATUS "Javelin steno: embedding dictionary from ${DICT_BIN_PATH}")
     else()
