@@ -17,6 +17,14 @@ Total flash usage (firmware + engine + dict) on a corne split (central half):
 | Lapwing only | 2.08 MB |
 | No dict (engine only) | 534 KB |
 
+## Making It Work on 1MB Flash
+
+If you want to use this on boards with limited flash (nice_nano_v2, etc.), some options:
+
+- **Optimize dictionary format** — Javelin uses JSC4 hash maps (~2-3MB compiled). A trie/DAWG-based format could reduce this significantly.
+- **Reduce dictionary size** — Trim to most common entries. ~120K entries fits ~458KB, ~100K entries fits ~384KB.
+- **Add external QSPI flash** — Boards with external flash (W25Q128, etc.) can store the full dictionary. The engine already supports XIP reads via `XipPointer`.
+
 ## Setup
 
 Add to your `west.yml`:
