@@ -43,7 +43,7 @@ CONFIG_LIB_CPLUSPLUS=y
 CONFIG_HEAP_MEM_POOL_SIZE=32768
 ```
 
-Add to your `.keymap`:
+Add to your `.keymap` (see [steno_keys.h](include/dt-bindings/zmk/javelin_steno.h) for all available key bindings):
 
 ```dts
 #include <dt-bindings/zmk/javelin_steno.h>
