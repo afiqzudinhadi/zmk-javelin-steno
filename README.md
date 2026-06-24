@@ -4,13 +4,18 @@ ZMK module that integrates the [Javelin steno engine](https://github.com/jthlim/
 
 ## Status
 
-Work in progress. Engine compiles and initializes. Dictionary auto-downloads and compiles during build. Requires sufficient flash for the compiled dictionary (~3-4MB for full Plover/Lapwing). Currently focused on nRF52840 boards with 1MB flash (nice_nano_v2). Not yet tested on boards with more flash or external QSPI.
+Dropped — my hardware (nice_nano_v2, 1MB flash) can't fit any dictionary. Build passes on boards with sufficient flash but has not been hardware tested. Contributions welcome.
 
-## Requirements
+## Flash Requirements
 
-- ZMK v0.3.0
-- nRF52840-based board (nice_nano_v2, etc.)
-- Split keyboard: steno runs on central half only
+Total flash usage (firmware + engine + dict) on a corne split (central half):
+
+| Dictionary | Total flash |
+|------------|------------|
+| Plover + Lapwing | 3.78 MB |
+| Plover only | 2.53 MB |
+| Lapwing only | 2.08 MB |
+| No dict (engine only) | 534 KB |
 
 ## Setup
 
@@ -38,10 +43,13 @@ Add to your `.conf`:
 ```ini
 CONFIG_ZMK_JAVELIN_STENO=y
 CONFIG_ZMK_JAVELIN_STENO_DICT_PLOVER=y
+CONFIG_ZMK_JAVELIN_STENO_DICT_LAPWING=y
 CONFIG_CPLUSPLUS=y
 CONFIG_LIB_CPLUSPLUS=y
 CONFIG_HEAP_MEM_POOL_SIZE=32768
 ```
+
+Set `CONFIG_ZMK_JAVELIN_STENO_DICT_PLOVER` and `CONFIG_ZMK_JAVELIN_STENO_DICT_LAPWING` to choose which dictionaries to include. Both can be enabled simultaneously.
 
 Add to your `.keymap` (see [steno_keys.h](include/dt-bindings/zmk/javelin_steno.h) for all available key bindings):
 
@@ -55,11 +63,6 @@ steno_layer {
     >;
 };
 ```
-
-## Known Issues
-
-- Plover and Lapwing dictionaries exceed nRF52840 flash (1MB). Dictionary embedding works but linker rejects due to flash overflow.
-- Boards with external QSPI flash (like the original Javelin hardware) would not have this limitation.
 
 ## License
 
